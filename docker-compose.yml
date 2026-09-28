@@ -24,7 +24,7 @@ services:
       DATABASE_URL: postgres://eve:eve@db:5432/eve
       REDIS_URL: redis://redis:6379/0
       DJANGO_DEBUG: "true"
-      DJANGO_SECRET_KEY: change-me-in-production
+      DJANGO_SECRET_KEY: dev-only-secret-key-change-me-in-production-0123456789
       PAYMENT_WEBHOOK_SECRET: dev-webhook-secret
     depends_on:
       db:
