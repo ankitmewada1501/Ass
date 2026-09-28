@@ -46,3 +46,9 @@ class WebhookAckSerializer(serializers.Serializer):
     note = serializers.CharField()
     payment_status = serializers.CharField()
     booking_status = serializers.CharField()
+
+
+class DevWebhookSerializer(serializers.Serializer):
+    provider_reference = serializers.CharField(max_length=64)
+    outcome = serializers.ChoiceField(choices=["succeeded", "failed"])
+    event_id = serializers.CharField(max_length=100, required=False)

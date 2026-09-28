@@ -3,8 +3,10 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from apps.core.views import health
+from apps.web.views import index
 
 urlpatterns = [
+    path("", index, name="home"),
     path("admin/", admin.site.urls),
     path("health/", health, name="health"),
     path("auth/", include("apps.accounts.urls")),

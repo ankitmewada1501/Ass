@@ -1,4 +1,7 @@
 import logging
+import uuid
+
+from django.conf import settings
 
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, serializers, status, viewsets
@@ -12,7 +15,7 @@ from apps.bookings.models import Booking
 
 from .authentication import SIGNATURE_HEADER, is_valid_signature
 from .models import Payment
-from .serializers import PaymentCreateSerializer, PaymentSerializer, WebhookAckSerializer, WebhookEventSerializer
+from .serializers import DevWebhookSerializer, PaymentCreateSerializer, PaymentSerializer, WebhookAckSerializer, WebhookEventSerializer
 from .services import IdempotencyKeyReused, create_payment, process_webhook_event
 
 logger = logging.getLogger(__name__)
@@ -126,4 +129,43 @@ class PaymentWebhookView(APIView):
                 "booking_status": event.payment.booking.status,
             },
             status=status.HTTP_200_OK,
+        )
+
+
+class DevWebhookSimulateView(APIView):
+    """
+    DEBUG-only helper for the web UI: plays the payment provider and delivers a
+    webhook event for one of the caller's own payments. Reusing `event_id`
+    demonstrates idempotency. Returns 404 when DEBUG is off.
+    """
+
+    @extend_schema(request=DevWebhookSerializer, responses={200: WebhookAckSerializer})
+    def post(self, request):
+        if not settings.DEBUG:
+            raise NotFound()
+        serializer = DevWebhookSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        if not Payment.objects.filter(provider_reference=data["provider_reference"], user=request.user).exists():
+            raise NotFound("Payment not found.")
+
+        event_id = data.get("event_id") or f"evt_{uuid.uuid4().hex}"
+        event_type = f"payment.{data['outcome']}"
+        payload = {"event_id": event_id, "type": event_type, "data": {"provider_reference": data["provider_reference"]}}
+        event, duplicate = process_webhook_event(
+            event_id=event_id,
+            event_type=event_type,
+            provider_reference=data["provider_reference"],
+            amount=None,
+            payload=payload,
+        )
+        return Response(
+            {
+                "event_id": event.event_id,
+                "duplicate": duplicate,
+                "status": event.status,
+                "note": event.note,
+                "payment_status": event.payment.status,
+                "booking_status": event.payment.booking.status,
+            }
         )

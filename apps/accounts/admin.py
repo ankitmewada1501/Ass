@@ -16,3 +16,7 @@ class UserAdmin(BaseUserAdmin):
         ("Dates", {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = ((None, {"classes": ("wide",), "fields": ("email", "full_name", "password1", "password2")}),)
+
+admin.site.site_header = "EVE Diagnostics admin"
+admin.site.site_title = "EVE Diagnostics admin"
+admin.site.index_title = "Catalogue, bookings & payments"

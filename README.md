@@ -32,7 +32,25 @@ docker compose exec web python manage.py seed_catalog          # sample centres 
 docker compose exec web python manage.py createsuperuser       # staff user for catalogue writes
 ```
 
-The API runs at http://localhost:8000. Interactive Swagger docs are at http://localhost:8000/docs/.
+Open http://localhost:8000 for the web app. Interactive Swagger docs are at http://localhost:8000/docs/,
+and the Django admin is at http://localhost:8000/admin/.
+
+### Web app
+
+The page at `/` is a small single-page client for the API. It is plain HTML, CSS and JavaScript
+served by Django, with no build step. With it you can:
+
+- browse and filter centres by city, test or name, and compare prices
+- sign up or log in (the JWT is stored in the browser and refreshed automatically)
+- book a test, then pay through the mock gateway and choose the outcome: success, decline,
+  pending, or random
+- **play the payment provider**: approve or decline a pending payment through the webhook, and
+  **replay** the same webhook event from the Payments page to see it reported as a duplicate
+- see bookings grouped by status, retry failed payments, and cancel bookings
+
+The page works on phones and supports dark mode. The provider buttons use
+`POST /payments/dev/simulate-webhook/`, which exists only when `DEBUG` is on. It only accepts
+the caller's own payments and runs the same idempotent handler as the real webhook.
 
 ### Option B — Local Python (SQLite by default)
 
@@ -67,7 +85,8 @@ apps/
   catalog/              DiagnosticCentre, DiagnosticTest, CentreTest (priced offering)
   bookings/             Booking model + state machine, services.py (business rules)
   payments/             Payment, WebhookEvent, mock gateway, services.py, HMAC webhook auth
-tests/                  pytest suite (auth, catalog, bookings, payments, webhook)
+apps/web/               single-page web client (template + static JS/CSS)
+tests/                  pytest suite (auth, catalog, bookings, payments, webhook, web)
 scripts/send_webhook.py acts as the payment provider and sends signed webhook events
 ```
 
@@ -108,7 +127,8 @@ Validation errors put the per-field messages in `details`. List endpoints are pa
 | POST | `/payments/` | JWT | Pay for a booking through the mock gateway (optional `Idempotency-Key` header) |
 | GET | `/payments/` · `/payments/{id}/` | JWT | Your payment attempts |
 | POST | `/payments/webhook/` | HMAC signature | Provider status callback (idempotent) |
-| GET | `/docs/` · `/schema/` · `/health/` | – | Swagger UI, OpenAPI schema, health check |
+| POST | `/payments/dev/simulate-webhook/` | JWT (DEBUG only) | Demo helper used by the web app to act as the provider |
+| GET | `/` · `/docs/` · `/schema/` · `/health/` | – | Web app, Swagger UI, OpenAPI schema, health check |
 
 ### Walkthrough (curl)
 
@@ -289,7 +309,7 @@ for a different booking returns 422.
 
 ## Tests
 
-There are 66 tests in `tests/`, run with pytest-django. They cover:
+There are 70 tests in `tests/`, run with pytest-django. They cover:
 
 - **Auth:** signup and login, field validation, email normalisation, token use, rate limiting
 - **Catalogue:** public reads, filters, staff-only writes, price validation, soft delete

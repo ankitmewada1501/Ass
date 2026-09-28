@@ -1,0 +1,57 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EVE Diagnostics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'web/app.css' %}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230d9488'/><path d='M13 8h6v5h5v6h-5v5h-6v-5H8v-6h5z' fill='white'/></svg>">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="#/centres">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></svg>
+        </span>
+        <span class="brand__name">EVE <span>Diagnostics</span></span>
+      </a>
+      <nav class="nav" id="nav">
+        <a href="#/centres" data-route="centres">Find a test</a>
+        <a href="#/bookings" data-route="bookings" data-auth>My bookings</a>
+        <a href="#/payments" data-route="payments" data-auth>Payments</a>
+      </nav>
+      <div class="session" id="session"></div>
+    </div>
+  </header>
+
+  <main class="container" id="view" aria-live="polite"></main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span>EVE Diagnostics · demo client for the booking API</span>
+      <span class="footer__links">
+        <a href="/docs/">API docs</a>
+        <a href="/admin/">Admin</a>
+      </span>
+    </div>
+  </footer>
+
+  <dialog class="modal" id="modal">
+    <div class="modal__card">
+      <button class="modal__close" type="button" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div id="modal-body"></div>
+    </div>
+  </dialog>
+
+  <div class="toasts" id="toasts" role="status"></div>
+
+  <script>window.EVE = { demoTools: {{ demo_tools|yesno:"true,false" }} };</script>
+  <script src="{% static 'web/app.js' %}"></script>
+</body>
+</html>
